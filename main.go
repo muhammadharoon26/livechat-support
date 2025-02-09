@@ -8,7 +8,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm/utils"
-	"honnef.co/go/tools/config"
 )
 
 func main() {
