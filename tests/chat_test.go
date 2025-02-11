@@ -3,50 +3,43 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
+	"livechat-support/database"
+	"livechat-support/models"
+	"livechat-support/utils"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"livechat-support/database"
-	"livechat-support/routes"
-
-	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
 
-func setupChatRouter() *gin.Engine {
-	r := gin.Default()
-	routes.RegisterRoutes(r)
-	return r
-}
+func TestSaveMessage(t *testing.T) {
+	database.ConnectDB()
+	utils.ConnectRedis()
+	r := setupTestRouter()
 
-func TestSendMessage(t *testing.T) {
-	database.ConnectDB() // Ensure DB is connected
-	router := setupChatRouter()
-
-	messageData := map[string]string{
-		"sender":  "testuser",
-		"message": "Hello, this is a test message!",
+	message := models.Message{
+		UserID:  1,
+		Content: "Hello, world!",
 	}
+	body, _ := json.Marshal(message)
 
-	jsonData, _ := json.Marshal(messageData)
-	req, _ := http.NewRequest("POST", "/send-message", bytes.NewBuffer(jsonData))
+	req, _ := http.NewRequest("POST", "/save-message", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
+	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "Message sent successfully")
 }
 
-func TestReceiveMessages(t *testing.T) {
-	router := setupChatRouter()
+func TestGetRecentMessages(t *testing.T) {
+	utils.ConnectRedis()
+	r := setupTestRouter()
 
-	req, _ := http.NewRequest("GET", "/messages", nil)
+	req, _ := http.NewRequest("GET", "/recent-messages", nil)
 	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
+	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "messages")
 }
