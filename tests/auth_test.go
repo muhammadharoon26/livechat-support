@@ -3,57 +3,57 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
-	"livechat-support/database"
-	"livechat-support/models"
-	"livechat-support/routes"
+	"livechat-support/utils"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 )
 
-func setupTestRouter() *gin.Engine {
-	r := gin.Default()
-	routes.RegisterRoutes(r)
-	return r
-}
-
 func TestRegister(t *testing.T) {
-	database.ConnectDB()
-	r := setupTestRouter()
+	utils.InitTestLogger() // Initialize logger for tests
+	router := setupRouter()
 
-	user := models.User{
-		Username: "testuser",
-		Password: "password123",
+	body := map[string]string{
+		"username": "testuser",
+		"password": "testpassword",
 	}
-	body, _ := json.Marshal(user)
+	jsonBody, _ := json.Marshal(body)
 
-	req, _ := http.NewRequest("POST", "/register", bytes.NewBuffer(body))
+	req, _ := http.NewRequest("POST", "/register", bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
-
 	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
+	router.ServeHTTP(w, req)
+
+	utils.Logger.Info("Testing Register Endpoint",
+		zap.Int("StatusCode", w.Code),
+		zap.String("Response", w.Body.String()),
+	)
 
 	assert.Equal(t, http.StatusCreated, w.Code)
 }
 
 func TestLogin(t *testing.T) {
-	database.ConnectDB()
-	r := setupTestRouter()
+	utils.InitTestLogger()
+	router := setupRouter()
 
-	user := models.User{
-		Username: "testuser",
-		Password: "password123",
+	body := map[string]string{
+		"username": "testuser",
+		"password": "testpassword",
 	}
-	body, _ := json.Marshal(user)
+	jsonBody, _ := json.Marshal(body)
 
-	req, _ := http.NewRequest("POST", "/login", bytes.NewBuffer(body))
+	req, _ := http.NewRequest("POST", "/login", bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
-
 	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
+	router.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusUnauthorized, w.Code) // Should be unauthorized unless user exists
+	utils.Logger.Info("Testing Login Endpoint",
+		zap.Int("StatusCode", w.Code),
+		zap.String("Response", w.Body.String()),
+	)
+
+	assert.Equal(t, http.StatusOK, w.Code)
 }
