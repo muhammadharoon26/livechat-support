@@ -6,8 +6,9 @@ import (
 	"livechat-support/database"
 	"livechat-support/routes"
 
+	"livechat-support/utils"
+
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm/utils"
 )
 
 func main() {
@@ -31,7 +32,7 @@ func main() {
 	r := gin.Default()
 
 	// Register Routes
-	routes.RegisterRoute(r)
+	routes.RegisterRoutes(r)
 
 	// Start Server
 	fmt.Println("Starting Server...")
